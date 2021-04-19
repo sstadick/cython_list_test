@@ -53,6 +53,7 @@ fn make_list_py<'py>(py: Python<'py>, a_list: &'py PyArray2<f64>) -> &'py PyArra
 #[pyfunction]
 fn iterate_list(a_list: &PyList) -> f64 {
     let mut count = 0.0;
+
     for i in 0..a_list.len() {
         let list: &PyList = a_list.get_item(i as isize).cast_as().unwrap();
 
@@ -65,17 +66,50 @@ fn iterate_list(a_list: &PyList) -> f64 {
     count
 }
 
+// #[pyfunction]
+// fn iterate_list_multi(py: Python, a_list: &PyList) -> f64 {
+//     // let mut count = 0.0;
+//     // for sublist in a_list.iter() {
+//     //     let list: &PyList = sublist.downcast().expect("list");
+//     //     for value in list.iter() {
+//     //         let value: &PyFloat = value.downcast().expect("float");
+//     //         count += value.value()
+//     //     }
+//     // }
+//     a_list.
+
+//     let count = py.allow_threads(|| {
+//         a_list
+//             .iter()
+//             .par_bridge()
+//             .map(|l| {
+//                 let list: &PyList = l.downcast().expect("list");
+//                 list.par_iter().sum()
+//             })
+//             .sum()
+//     });
+
+//     // let count = py.allow_threads(|| {
+//     //     a_list
+//     //         .par_iter()
+//     //         .map(|l| l.iter().sum::<f64>())
+//     //         .sum::<f64>()
+//     // });
+//     println!("{}", count);
+
+//     return count;
+// }
+
 #[pyfunction]
 fn make_list<'py>(py: Python<'py>, a_list: &'py PyList) -> &'py PyList {
-    let mut test: Vec<Vec<f64>> = Vec::new();
     for _i in 0..i64::pow(10, 4) {
-        let mut new_list: Vec<f64> = Vec::new();
+        let mut new_list = Vec::<f64>::new();
         for _j in 0..i64::pow(10, 4) {
-            new_list.push(0.01);
+            new_list.push(0.01_f64);
         }
-        test.push(new_list);
+        a_list.append(PyList::new(py, new_list)).unwrap();
     }
-    PyList::new(py, test)
+    a_list
 }
 
 #[pymodule]
