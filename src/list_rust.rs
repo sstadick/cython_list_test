@@ -1,8 +1,12 @@
 extern crate ndarray;
 use ndarray::{parallel::prelude::*, Axis};
 use numpy::{PyArray2, PyReadonlyArray2};
-use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
+use pyo3::{
+    prelude::*,
+    types::{PyFloat, PyList},
+};
+use rayon::prelude::*;
 
 #[pyfunction]
 fn iterate_list_py<'py>(py: Python<'py>, a_list: PyReadonlyArray2<'_, f64>) -> f64 {
@@ -47,29 +51,31 @@ fn make_list_py<'py>(py: Python<'py>, a_list: &'py PyArray2<f64>) -> &'py PyArra
 }
 
 #[pyfunction]
-fn iterate_list(py: Python, a_list: Vec<Vec<f64>>) -> f64 {
-    let count = a_list.iter().map(|l| l.iter().sum::<f64>()).sum::<f64>();
-    // let count = py.allow_threads(|| {
-    //     a_list
-    //         .par_iter()
-    //         .map(|l| l.iter().sum::<f64>())
-    //         .sum::<f64>()
-    // });
-    println!("{}", count);
+fn iterate_list(a_list: &PyList) -> f64 {
+    let mut count = 0.0;
+    for i in 0..a_list.len() {
+        let list: &PyList = a_list.get_item(i as isize).cast_as().unwrap();
 
-    return count;
+        for j in 0..list.len() {
+            let value: &PyFloat = list.get_item(j as isize).cast_as().unwrap();
+            count += value.value();
+        }
+    }
+    println!("{}", count);
+    count
 }
 
 #[pyfunction]
-fn make_list(mut a_list: Vec<Vec<f64>>) -> Vec<Vec<f64>> {
+fn make_list<'py>(py: Python<'py>, a_list: &'py PyList) -> &'py PyList {
+    let mut test: Vec<Vec<f64>> = Vec::new();
     for _i in 0..i64::pow(10, 4) {
-        let mut new_list = Vec::<f64>::new();
+        let mut new_list: Vec<f64> = Vec::new();
         for _j in 0..i64::pow(10, 4) {
-            new_list.push(0.01_f64);
+            new_list.push(0.01);
         }
-        a_list.push(new_list);
+        test.push(new_list);
     }
-    return a_list;
+    PyList::new(py, test)
 }
 
 #[pymodule]
